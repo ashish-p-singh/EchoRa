@@ -12,6 +12,7 @@ export const BACKEND_MOCK_TRACKS: Track[] = [
     durationMs: 214000,
     spotifyUrl: "https://open.spotify.com/search/Midnight%20Library%20Luna%20Fields",
     previewUrl: null,
+    matchReason: "Soft ambient piano textures and slow tempo matching quiet nighttime focus.",
   },
   {
     id: "mock-2",
@@ -22,6 +23,7 @@ export const BACKEND_MOCK_TRACKS: Track[] = [
     durationMs: 187000,
     spotifyUrl: "https://open.spotify.com/search/Soft%20Static%20Nocturne%20Collective",
     previewUrl: null,
+    matchReason: "Subtle lofi vinyl warmth with steady, unobtrusive rhythm.",
   },
   {
     id: "mock-3",
@@ -32,6 +34,7 @@ export const BACKEND_MOCK_TRACKS: Track[] = [
     durationMs: 241000,
     spotifyUrl: "https://open.spotify.com/search/Paper%20Lanterns%20Kei%20Aoyama",
     previewUrl: null,
+    matchReason: "Delicate acoustic fingerpicking creating an intimate, reflective atmosphere.",
   },
   {
     id: "mock-4",
@@ -42,6 +45,7 @@ export const BACKEND_MOCK_TRACKS: Track[] = [
     durationMs: 198000,
     spotifyUrl: "https://open.spotify.com/search/Rain%20on%20Glass%20The%20Slow%20Tides",
     previewUrl: null,
+    matchReason: "Mellow instrumental progression capturing contemplative rainy vibes.",
   },
   {
     id: "mock-5",
@@ -52,6 +56,7 @@ export const BACKEND_MOCK_TRACKS: Track[] = [
     durationMs: 263000,
     spotifyUrl: "https://open.spotify.com/search/Low%20Orbit%20Satellite%20Hearts",
     previewUrl: null,
+    matchReason: "Expansive ethereal soundscape with slow, relaxing cadence.",
   },
   {
     id: "mock-6",
@@ -62,6 +67,7 @@ export const BACKEND_MOCK_TRACKS: Track[] = [
     durationMs: 176000,
     spotifyUrl: "https://open.spotify.com/search/Warm%20Coffee%20Ellis%20Park",
     previewUrl: null,
+    matchReason: "Gentle morning acoustic melodies with warm, peaceful harmonics.",
   },
   {
     id: "mock-7",
@@ -72,6 +78,7 @@ export const BACKEND_MOCK_TRACKS: Track[] = [
     durationMs: 305000,
     spotifyUrl: "https://open.spotify.com/search/Northern%20Lights%20Aurora%20Drift",
     previewUrl: null,
+    matchReason: "Tranquil ambient synthesis offering deep mental calm.",
   },
 ];
 
@@ -86,6 +93,11 @@ export function getMockIntent(prompt: string): MusicIntent {
       genre: ["edm", "hip hop"],
       vocals: "any",
       time_context: "any",
+      multiQueries: {
+        moodQuery: "energetic workout",
+        genreQuery: "genre:\"edm\" year:2020-2026",
+        contextQuery: "gym fast tempo",
+      },
       breakdown: {
         mood: { value: "energetic", source: "explicit", priority: "high" },
         activity: { value: "workout", source: "explicit", priority: "high" },
@@ -106,6 +118,13 @@ export function getMockIntent(prompt: string): MusicIntent {
       genre: ["acoustic", "indie"],
       vocals: "vocals_preferred",
       time_context: "evening",
+      language: null,
+      era: null,
+      multiQueries: {
+        moodQuery: "melancholic sad acoustic NOT remix",
+        genreQuery: "genre:\"indie folk\" acoustic NOT live",
+        contextQuery: "rain evening chill NOT remix",
+      },
       breakdown: {
         mood: { value: "melancholic", source: "explicit", priority: "high" },
         activity: { value: "relaxing", source: "inferred", priority: "medium" },
@@ -126,6 +145,20 @@ export function getMockIntent(prompt: string): MusicIntent {
       genre: ["acoustic", "folk"],
       vocals: "any",
       time_context: "morning",
+      language: null,
+      era: null,
+      sonicProfile: {
+        instruments: ["acoustic guitar", "percussion"],
+        production: "bright acoustic warmth",
+        tempoDescription: "medium walking 105bpm",
+        emotionalSubtext: "radiant morning optimism",
+      },
+      multiQueries: {
+        moodQuery: "happy upbeat acoustic",
+        genreQuery: "genre:\"folk-pop\" year:2018-2026",
+        contextQuery: "morning sunshine acoustic",
+        masterQuery: "acoustic folk pop happy",
+      },
       breakdown: {
         mood: { value: "happy", source: "explicit", priority: "high" },
         activity: { value: null, source: "unspecified", priority: "none" },
@@ -145,6 +178,20 @@ export function getMockIntent(prompt: string): MusicIntent {
     genre: ["ambient", "lofi"],
     vocals: "instrumental_preferred",
     time_context: "late_night",
+    language: null,
+    era: null,
+    sonicProfile: {
+      instruments: ["felt piano", "sub bass", "analog tape"],
+      production: "lo-fi vinyl warmth",
+      tempoDescription: "slow unhurried 70bpm",
+      emotionalSubtext: "quiet contemplative late-night focus",
+    },
+    multiQueries: {
+      moodQuery: "calm lofi beats",
+      genreQuery: "genre:\"lo-fi beats\" chillhop",
+      contextQuery: "late night study instrumental",
+      masterQuery: "lo-fi chillhop beats ambient",
+    },
     breakdown: {
       mood: { value: "calm", source: "explicit", priority: "high" },
       activity: { value: "studying", source: "explicit", priority: "high" },

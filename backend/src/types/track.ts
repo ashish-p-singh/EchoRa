@@ -10,5 +10,9 @@ export interface Track {
   spotifyUrl: string;
   /** 30s preview; usually null since Spotify phased previews out. */
   previewUrl: string | null;
+  /** Release year of the track/album if available. */
+  releaseYear?: number | null;
+  /** AI-generated contextual reason explaining why this track matches the user's intent. */
+  matchReason?: string | null;
 }
 

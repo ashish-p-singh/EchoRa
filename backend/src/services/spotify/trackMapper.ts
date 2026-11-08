@@ -11,6 +11,7 @@ export interface SpotifyTrackObject {
   artists?: Array<{ name?: string | null } | null> | null;
   album?: {
     name?: string | null;
+    release_date?: string | null;
     images?: Array<{ url?: string | null; width?: number | null; height?: number | null } | null> | null;
   } | null;
 }
@@ -41,6 +42,15 @@ export function mapSpotifyTrack(raw: SpotifyTrackObject | null | undefined): Tra
     .map((a) => a?.name?.trim())
     .filter((name): name is string => Boolean(name));
 
+  const rawDate = raw.album?.release_date;
+  let releaseYear: number | null = null;
+  if (rawDate && typeof rawDate === "string") {
+    const yr = parseInt(rawDate.slice(0, 4), 10);
+    if (!isNaN(yr) && yr > 1900 && yr < 2100) {
+      releaseYear = yr;
+    }
+  }
+
   return {
     id: raw.id,
     name: raw.name?.trim() || "Unknown title",
@@ -50,6 +60,7 @@ export function mapSpotifyTrack(raw: SpotifyTrackObject | null | undefined): Tra
     durationMs: typeof raw.duration_ms === "number" && raw.duration_ms >= 0 ? raw.duration_ms : null,
     spotifyUrl: raw.external_urls?.spotify || `https://open.spotify.com/track/${raw.id}`,
     previewUrl: raw.preview_url || null,
+    releaseYear,
   };
 }
 

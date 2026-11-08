@@ -9,23 +9,23 @@ export interface ExamplePromptOption {
 const EXAMPLE_CHIPS: ExamplePromptOption[] = [
   {
     label: '🌧 Rainy day focus',
-    prompt: 'Mellow acoustic songs and calm beats for a rainy focus session',
+    prompt: 'Rainy day focus',
   },
   {
     label: '🏋 Gym power-up',
-    prompt: 'Aggressive, high-energy phonk and electronic for an intense workout',
+    prompt: 'Gym power-up',
   },
   {
     label: '🌙 Late-night calm',
-    prompt: 'Peaceful instrumental music for studying at 3 AM',
+    prompt: 'Late-night calm',
   },
   {
     label: '☀️ Sunny road trip',
-    prompt: 'Upbeat feel-good indie pop for a warm sunny highway drive',
+    prompt: 'Sunny road trip',
   },
   {
     label: '💔 Heartbreak hours',
-    prompt: 'Melancholic acoustic ballads for late-night emotional reflection',
+    prompt: 'Heartbreak hours',
   },
 ];
 

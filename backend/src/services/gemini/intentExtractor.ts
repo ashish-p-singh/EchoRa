@@ -1,9 +1,10 @@
 import type { MusicIntent } from "../../types/intent.js";
+import type { DiscoveryContext } from "../../types/discovery.js";
 import { AppError } from "../../utils/AppError.js";
 import { logger } from "../../utils/logger.js";
 import type { GeminiClient } from "./geminiClient.js";
 import { MUSIC_INTENT_JSON_SCHEMA, musicIntentSchema } from "./intentSchema.js";
-import { INTENT_SYSTEM_INSTRUCTION } from "./prompt.js";
+import { INTENT_SYSTEM_INSTRUCTION, buildIntentSystemInstruction } from "./prompt.js";
 
 const MAX_ATTEMPTS = 2;
 
@@ -39,21 +40,28 @@ export interface IntentExtractorHooks {
   onKeyValidity?: (valid: boolean) => void;
 }
 
-export type IntentExtractor = (prompt: string, signal?: AbortSignal) => Promise<MusicIntent>;
+export type IntentExtractor = (
+  prompt: string,
+  signal?: AbortSignal,
+  discoveryContext?: DiscoveryContext,
+) => Promise<MusicIntent>;
 
 /**
- * Creates the intent extractor. Input is the user's prompt only.
+ * Creates the intent extractor. Input is the user's prompt and optional discovery context.
  * Retries once on malformed output or transient unavailability.
  */
 export function createIntentExtractor(client: GeminiClient, hooks: IntentExtractorHooks = {}): IntentExtractor {
-  return async (prompt, signal) => {
+  return async (prompt, signal, discoveryContext) => {
     let lastError: AppError | undefined;
+    const systemInstruction = discoveryContext?.discoveryMode
+      ? buildIntentSystemInstruction(discoveryContext.discoveryMode)
+      : INTENT_SYSTEM_INSTRUCTION;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
         const raw = await client.generateJson({
           userText: prompt,
-          systemInstruction: INTENT_SYSTEM_INSTRUCTION,
+          systemInstruction,
           jsonSchema: MUSIC_INTENT_JSON_SCHEMA,
           signal,
         });

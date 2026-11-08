@@ -22,6 +22,37 @@ export interface CategorizedPreference<T> {
   priority: PriorityLevel;
 }
 
+export interface AntiSonicAura {
+  /** Instruments strictly banned from this vibe (e.g. ["phonk cowbell", "trap 808s", "loud brass"]) */
+  forbiddenInstruments?: string[];
+  /** Musical energy or sub-genres strictly banned (e.g. ["party dance track", "club remix", "theatrical belting"]) */
+  forbiddenVibes?: string[];
+}
+
+export interface SonicProfile {
+  /** Target instruments or acoustic textures, e.g. ["nylon guitar", "felt piano"] */
+  instruments?: string[];
+  /** Production texture, e.g. "warm analog acoustic" or "cold reverb synth" */
+  production?: string | null;
+  /** Tempo description, e.g. "slow unhurried cadence" */
+  tempoDescription?: string | null;
+  /** Emotional subtext, e.g. "quiet bittersweet nostalgic longing" */
+  emotionalSubtext?: string | null;
+  /** Harmonic key emotion: minor (melancholic/sad/serious), major (bright/joyful), modal_dissonant (haunting) */
+  harmonicMode?: "minor" | "major" | "modal_dissonant" | null;
+  /** Vocal style & delivery (e.g. "intimate, breathy, melodic; NO loud theatrical belting or aggressive rap") */
+  vocalStyle?: string | null;
+  /** Negative audio constraints that disqualify candidate songs */
+  antiSonicAura?: AntiSonicAura;
+}
+
+export interface MultiQueries {
+  moodQuery: string;
+  genreQuery: string;
+  contextQuery: string;
+  masterQuery?: string;
+}
+
 /**
  * Enhanced intent representation distinguishing explicit, inferred, and optional preferences
  * while maintaining backward compatibility with the frontend MusicIntent contract.
@@ -37,6 +68,22 @@ export interface MusicIntent {
   genre: string[];
   vocals: VocalPreference;
   time_context: TimeContext;
+
+  /** Explicitly stated or strongly implied language (e.g. "hindi", "punjabi", "spanish") */
+  language?: string | null;
+  /** Explicitly stated or strongly implied era / decade (e.g. "1990s", "80s", "retro") */
+  era?: string | null;
+
+  /** Specific track title if user is looking for a particular song */
+  trackTitle?: string | null;
+  /** Specific artist if user is looking for a particular artist */
+  artist?: string | null;
+
+  /** Acoustic and emotional sonic profile for semantic depth reranking */
+  sonicProfile?: SonicProfile;
+
+  /** Multi-facet Spotify queries authored directly by the semantic engine */
+  multiQueries?: MultiQueries;
 
   /** Detailed classification & prioritization breakdown (internal & intelligence engine) */
   breakdown?: {

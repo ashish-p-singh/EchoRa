@@ -204,19 +204,26 @@ export const TrackCard = memo(function TrackCard({
               {artistText}
             </p>
 
-            {/* Album Name */}
-            <p className="text-[11px] text-text-faint truncate mt-0.5" title={track.album}>
-              {track.album}
+            {/* Match Reason or Album Name */}
+            <p className="text-[11px] text-text-faint truncate mt-0.5" title={track.matchReason || track.album}>
+              {track.matchReason ? `✨ ${track.matchReason}` : track.album}
             </p>
           </div>
 
-          {/* Bottom Actions: Duration badge & Open in Spotify link */}
+          {/* Bottom Actions: Release year & Duration badges & Open in Spotify link */}
           <div className="flex items-center justify-between gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
-            {durationText ? (
-              <span className="font-mono text-[10px] text-text-faint bg-white/[0.05] border border-white/10 px-2 py-0.5 rounded-full">
-                {durationText}
-              </span>
-            ) : <span />}
+            <div className="flex items-center gap-1.5 overflow-hidden">
+              {track.releaseYear && (
+                <span className="font-mono text-[10px] text-text-faint bg-white/[0.05] border border-white/10 px-2 py-0.5 rounded-full shrink-0">
+                  {track.releaseYear}
+                </span>
+              )}
+              {durationText ? (
+                <span className="font-mono text-[10px] text-text-faint bg-white/[0.05] border border-white/10 px-2 py-0.5 rounded-full shrink-0">
+                  {durationText}
+                </span>
+              ) : null}
+            </div>
 
             <a
               href={track.spotifyUrl}

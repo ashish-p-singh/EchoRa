@@ -12,10 +12,12 @@ import {
   Moon,
   Sparkles,
   ChevronDown,
+  Terminal,
 } from 'lucide-react';
 import type { SearchResponse } from '../types';
 import { IntentTile } from './IntentTile';
 import { QueryLine } from './QueryLine';
+import { GeneratedQueriesDialog } from './GeneratedQueriesDialog';
 
 interface IntentPanelProps {
   data: SearchResponse;
@@ -25,6 +27,7 @@ interface IntentPanelProps {
 
 export const IntentPanel = memo(function IntentPanel({ data, userPrompt, onCopyNotice }: IntentPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isQueriesDialogOpen, setIsQueriesDialogOpen] = useState(false);
   const { intent, mode } = data;
   const breakdown = intent.breakdown;
 
@@ -93,17 +96,34 @@ export const IntentPanel = memo(function IntentPanel({ data, userPrompt, onCopyN
 
   return (
     <div className="mb-8">
-      <button
-        type="button"
-        aria-expanded={isExpanded}
-        aria-controls="how-i-heard-you-panel"
-        onClick={() => setIsExpanded((expanded) => !expanded)}
-        className="glass-pill inline-flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-text hover:bg-white/[0.08] border border-white/10 transition-all cursor-pointer"
-      >
-        <AudioWaveform className="w-4 h-4 mood-accent-text" />
-        <span>How I heard you</span>
-        <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-      </button>
+      <div className="flex flex-wrap items-center gap-2.5">
+        <button
+          type="button"
+          aria-expanded={isExpanded}
+          aria-controls="how-i-heard-you-panel"
+          onClick={() => setIsExpanded((expanded) => !expanded)}
+          className="glass-pill inline-flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-text hover:bg-white/[0.08] border border-white/10 transition-all cursor-pointer"
+        >
+          <AudioWaveform className="w-4 h-4 mood-accent-text" />
+          <span>How I heard you</span>
+          <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsQueriesDialogOpen(true)}
+          className="glass-pill inline-flex items-center gap-2 px-3.5 py-2.5 text-sm font-semibold text-cyan hover:bg-cyan/15 border border-cyan/30 transition-all cursor-pointer"
+        >
+          <Terminal className="w-4 h-4 text-cyan" />
+          <span>View Generated Queries</span>
+        </button>
+      </div>
+
+      <GeneratedQueriesDialog
+        isOpen={isQueriesDialogOpen}
+        onClose={() => setIsQueriesDialogOpen(false)}
+        data={data}
+      />
 
       {isExpanded && <div id="how-i-heard-you-panel" className="glass-panel mt-3 p-5 sm:p-6 rounded-card border border-white/10 shadow-glass">
       {/* Header */}
@@ -142,6 +162,8 @@ export const IntentPanel = memo(function IntentPanel({ data, userPrompt, onCopyN
           {intent.mood || 'Open'}
         </span>
         {intent.activity && <span className="text-xs text-text-dim">for {intent.activity}</span>}
+        {intent.language && <span className="text-xs text-cyan font-medium capitalize">· {intent.language}</span>}
+        {intent.era && <span className="text-xs text-amber font-medium">· {intent.era}</span>}
         {intent.time_context && intent.time_context !== 'any' && (
           <span className="text-xs text-text-dim">· {intent.time_context.replace('_', ' ')}</span>
         )}

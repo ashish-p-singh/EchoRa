@@ -83,7 +83,7 @@ describe('ECHORA App UI', () => {
     await user.click(chip);
 
     expect(searchSpy).toHaveBeenCalledWith(
-      'Mellow acoustic songs and calm beats for a rainy focus session',
+      'Rainy day focus',
       expect.objectContaining({ discoveryMode: 'FAMILIAR' }),
       expect.any(AbortSignal)
     );

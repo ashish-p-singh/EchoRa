@@ -13,6 +13,7 @@ import { parseIntent } from "./services/gemini/intentExtractor.js";
 import { INTENT_SYSTEM_INSTRUCTION } from "./services/gemini/prompt.js";
 import { MUSIC_INTENT_JSON_SCHEMA } from "./services/gemini/intentSchema.js";
 import { createMusicController } from "./controllers/music.controller.js";
+import { createSemanticReranker } from "./services/gemini/reranker.js";
 import { createSpotifyController } from "./controllers/spotify.controller.js";
 import { createStatusController } from "./controllers/status.controller.js";
 import { createCameraController } from "./controllers/camera.controller.js";
@@ -121,6 +122,7 @@ export function createApp(deps: AppDependencies = {}): Express {
   const musicController = createMusicController(config, credState, spotifyAuth, {
     intentExtractor,
     spotifySearch,
+    reranker: createSemanticReranker(geminiClient),
   });
   const spotifyController = createSpotifyController(config, spotifyAuth);
   const statusController = createStatusController(config, credState, spotifyAuth);

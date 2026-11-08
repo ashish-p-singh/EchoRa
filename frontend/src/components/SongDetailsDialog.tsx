@@ -235,6 +235,21 @@ export function SongDetailsDialog({
             </div>
           </div>
 
+          {/* AI Match Reason Callout */}
+          {track.matchReason && (
+            <div className="p-3 rounded-xl bg-violet/10 border border-violet/25 flex items-start gap-2.5">
+              <Sparkles className="w-4 h-4 text-violet shrink-0 mt-0.5" />
+              <div className="min-w-0 flex-1">
+                <span className="block text-[10px] font-semibold uppercase tracking-wider text-violet-light">
+                  AI Vibe Match Reason
+                </span>
+                <p className="text-xs text-text-dim mt-0.5 leading-relaxed">
+                  {track.matchReason}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Structured Metadata Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {/* Album Box */}
@@ -251,6 +266,7 @@ export function SongDetailsDialog({
                   title={track.album || 'Unknown album'}
                 >
                   {track.album || 'Unknown album'}
+                  {track.releaseYear ? ` (${track.releaseYear})` : ''}
                 </span>
               </div>
             </div>

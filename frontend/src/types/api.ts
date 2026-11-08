@@ -19,6 +19,28 @@ export interface MusicIntent {
   genre: string[];
   vocals: VocalPreference;
   time_context: TimeContext;
+  language?: string | null;
+  era?: string | null;
+  trackTitle?: string | null;
+  artist?: string | null;
+  sonicProfile?: {
+    instruments?: string[];
+    production?: string | null;
+    tempoDescription?: string | null;
+    emotionalSubtext?: string | null;
+    harmonicMode?: 'minor' | 'major' | 'modal_dissonant' | null;
+    vocalStyle?: string | null;
+    antiSonicAura?: {
+      forbiddenInstruments?: string[];
+      forbiddenVibes?: string[];
+    };
+  };
+  multiQueries?: {
+    moodQuery: string;
+    genreQuery: string;
+    contextQuery: string;
+    masterQuery?: string;
+  };
 }
 
 export interface Track {
@@ -30,6 +52,8 @@ export interface Track {
   durationMs: number | null;
   spotifyUrl: string;
   previewUrl: string | null;
+  releaseYear?: number | null;
+  matchReason?: string | null;
 }
 
 export type AppMode = "mock" | "live";
