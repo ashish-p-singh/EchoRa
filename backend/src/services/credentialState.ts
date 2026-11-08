@@ -8,12 +8,13 @@
  * independent of each other while the mode resolver reads both.
  */
 export interface CredentialState {
+  grokValid: boolean | null;
   geminiValid: boolean | null;
   openaiValid: boolean | null;
   spotifyValid: boolean | null;
 }
 
 export function createCredentialState(): CredentialState {
-  return { geminiValid: null, openaiValid: null, spotifyValid: null };
+  return { grokValid: null, geminiValid: null, openaiValid: null, spotifyValid: null };
 }
 

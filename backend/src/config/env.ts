@@ -18,8 +18,11 @@ export const SPOTIFY_REDIRECT_URI = `${BACKEND_URL}/api/spotify/callback`;
 /** Default model alias; always points at the current Gemini Flash model. Override with GEMINI_MODEL. */
 export const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
 export const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
+export const DEFAULT_GROK_MODEL = "grok-2-latest";
 
 export interface AppConfig {
+  grokApiKey: string | null;
+  grokModel: string;
   geminiApiKey: string | null;
   geminiModel: string;
   openaiApiKey: string | null;
@@ -39,6 +42,8 @@ function clean(value: string | undefined): string | null {
 /** Builds configuration from an environment map (pure; easy to test). */
 export function buildConfig(env: NodeJS.ProcessEnv): AppConfig {
   return {
+    grokApiKey: clean(env.GROK_API_KEY ?? env.XAI_API_KEY),
+    grokModel: clean(env.GROK_MODEL ?? env.XAI_MODEL) ?? DEFAULT_GROK_MODEL,
     geminiApiKey: clean(env.GEMINI_API_KEY),
     geminiModel: clean(env.GEMINI_MODEL) ?? DEFAULT_GEMINI_MODEL,
     openaiApiKey: clean(env.OPENAI_API_KEY),

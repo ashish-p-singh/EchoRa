@@ -14,19 +14,31 @@ export function resolveAppMode(
   credState: CredentialState,
   spotifyAuth: SpotifyAuth | null,
 ): ModeResolution {
+  const grokConfigured = Boolean(config.grokApiKey);
   const geminiConfigured = Boolean(config.geminiApiKey);
   const openaiConfigured = Boolean(config.openaiApiKey);
-  const aiReady = (geminiConfigured && credState.geminiValid !== false) || (openaiConfigured && credState.openaiValid !== false);
+  const aiReady =
+    (grokConfigured && credState.grokValid !== false) ||
+    (geminiConfigured && credState.geminiValid !== false) ||
+    (openaiConfigured && credState.openaiValid !== false);
   const spotifyConfigured = Boolean(config.spotifyClientId && config.spotifyClientSecret);
   const spotifyAuthorized = Boolean(spotifyAuth?.isAuthorized());
 
   const missing: string[] = [];
   if (!aiReady) {
-    if (!geminiConfigured) missing.push("Gemini API key is not configured.");
-    if (!openaiConfigured) missing.push("OpenAI API key is not configured.");
-  }
-  if (geminiConfigured && credState.geminiValid === false && !openaiConfigured) {
-    missing.push("Gemini API key was rejected by the API.");
+    if (!grokConfigured && !geminiConfigured && !openaiConfigured) {
+      missing.push("AI provider API key (Grok, Gemini, or OpenAI) is not configured.");
+    } else {
+      if (grokConfigured && credState.grokValid === false) {
+        missing.push("Grok (xAI) API key was rejected or has insufficient credits.");
+      }
+      if (geminiConfigured && credState.geminiValid === false) {
+        missing.push("Gemini API key was rejected by the API.");
+      }
+      if (openaiConfigured && credState.openaiValid === false) {
+        missing.push("OpenAI API key was rejected by the API.");
+      }
+    }
   }
 
   if (!spotifyConfigured) {
@@ -37,15 +49,28 @@ export function resolveAppMode(
     missing.push("Spotify authorization required. Click 'Connect Spotify'.");
   }
 
-  const geminiReady = aiReady;
+  const aiProviderReady = aiReady;
   const spotifyReady = spotifyConfigured && credState.spotifyValid !== false && spotifyAuthorized;
 
-  const interpretMode: AppMode = geminiReady ? "live" : "mock";
-  const searchMode: AppMode = geminiReady && spotifyReady ? "live" : "mock";
+  const interpretMode: AppMode = aiProviderReady ? "live" : "mock";
+  const searchMode: AppMode = aiProviderReady && spotifyReady ? "live" : "mock";
+
+  const activeProvider =
+    grokConfigured && credState.grokValid !== false
+      ? "grok"
+      : geminiConfigured && credState.geminiValid !== false
+        ? "gemini"
+        : openaiConfigured && credState.openaiValid !== false
+          ? "openai"
+          : "mock";
 
   const status: StatusResponse = {
     mode: searchMode,
     interpretMode,
+    grok: {
+      configured: grokConfigured,
+      valid: credState.grokValid,
+    },
     gemini: {
       configured: geminiConfigured,
       valid: credState.geminiValid,
@@ -56,6 +81,7 @@ export function resolveAppMode(
       valid: credState.spotifyValid,
       authorized: spotifyAuthorized,
     },
+    activeProvider,
     missing,
   };
 

@@ -76,9 +76,11 @@ export interface SearchResponse {
 export interface StatusResponse {
   mode: AppMode;
   interpretMode: AppMode;
+  grok?: { configured: boolean; valid: boolean | null };
   gemini: { configured: boolean; valid: boolean | null };
   openai: { configured: boolean; valid: boolean | null };
   spotify: { configured: boolean; valid: boolean | null; authorized: boolean };
+  activeProvider?: "grok" | "gemini" | "openai" | "mock";
   missing: string[];
 }
 

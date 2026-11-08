@@ -7,17 +7,18 @@ import { createFileTokenStore, type TokenStore } from "./services/spotify/tokenS
 import { createSpotifyAuth, type SpotifyAuth } from "./services/spotify/spotifyAuth.js";
 import { createSpotifySearch, type SpotifySearch } from "./services/spotify/spotifySearch.js";
 import { createGeminiClient } from "./services/gemini/geminiClient.js";
+import { createGrokClient } from "./services/grok/grokClient.js";
 import { createOpenAIClient } from "./services/openai/openaiClient.js";
+import { createTieredAIClient, type AIProviderTier } from "./services/tieredAIClient.js";
 import { createIntentExtractor, type IntentExtractor } from "./services/gemini/intentExtractor.js";
-import { parseIntent } from "./services/gemini/intentExtractor.js";
-import { INTENT_SYSTEM_INSTRUCTION } from "./services/gemini/prompt.js";
-import { MUSIC_INTENT_JSON_SCHEMA } from "./services/gemini/intentSchema.js";
 import { createMusicController } from "./controllers/music.controller.js";
 import { createSemanticReranker } from "./services/gemini/reranker.js";
 import { createSpotifyController } from "./controllers/spotify.controller.js";
 import { createStatusController } from "./controllers/status.controller.js";
 import { createCameraController } from "./controllers/camera.controller.js";
 import { createGeminiVisionService, type GeminiVisionService } from "./services/gemini/geminiVision.js";
+import { createGrokVisionService } from "./services/grok/grokVision.js";
+import { logger } from "./utils/logger.js";
 import { createTransitionPlanner } from "./services/transition/transitionPlanner.js";
 import { createStageIntentGenerator } from "./services/transition/stageIntentGenerator.js";
 import { createPlaylistAssembler } from "./services/transition/playlistAssembler.js";
@@ -41,6 +42,7 @@ export function createApp(deps: AppDependencies = {}): Express {
   const config = deps.config ?? loadConfig();
 
   // Register secrets for redaction in logs
+  registerSecret(config.grokApiKey);
   registerSecret(config.geminiApiKey);
   registerSecret(config.openaiApiKey);
   registerSecret(config.spotifyClientId);
@@ -69,49 +71,84 @@ export function createApp(deps: AppDependencies = {}): Express {
     spotifySearch = createSpotifySearch({ auth: spotifyAuth });
   }
 
-  // Initialize Gemini Intent Extractor if key exists
-  let intentExtractor: IntentExtractor | null = deps.intentExtractor ?? null;
-  let visionService: GeminiVisionService | null = deps.visionService ?? null;
-  let geminiClient: ReturnType<typeof createGeminiClient> | null = null;
+  // Initialize AI Provider Clients in Tiered Preference Order:
+  // 1. Grok (xAI) - Top preference
+  // 2. Gemini - Secondary preference / Primary fallback
+  // 3. OpenAI - Tertiary fallback
+  const grokClient = config.grokApiKey ? createGrokClient(config.grokApiKey, config.grokModel) : null;
+  const geminiClient = config.geminiApiKey ? createGeminiClient(config.geminiApiKey, config.geminiModel) : null;
   const openaiClient = config.openaiApiKey ? createOpenAIClient(config.openaiApiKey, config.openaiModel) : null;
 
-  if (config.geminiApiKey) {
-    geminiClient = createGeminiClient(config.geminiApiKey, config.geminiModel);
-    if (!intentExtractor) {
-      intentExtractor = createIntentExtractor(geminiClient, {
-        onKeyValidity: (valid) => {
-          credState.geminiValid = valid;
-        },
-      });
-    }
-
-    if (!visionService) {
-      visionService = createGeminiVisionService(config.geminiApiKey, config.geminiModel);
-    }
+  const aiProviders: AIProviderTier[] = [];
+  if (grokClient) {
+    aiProviders.push({
+      name: "grok",
+      client: grokClient,
+      onValidity: (valid) => {
+        credState.grokValid = valid;
+      },
+    });
   }
-
+  if (geminiClient) {
+    aiProviders.push({
+      name: "gemini",
+      client: geminiClient,
+      onValidity: (valid) => {
+        credState.geminiValid = valid;
+      },
+    });
+  }
   if (openaiClient) {
-    const geminiExtractor = intentExtractor;
-    intentExtractor = async (prompt, signal) => {
-      try {
-        if (!geminiExtractor) throw new Error("Gemini provider is not configured");
-        return await geminiExtractor(prompt, signal);
-      } catch {
-        // Gemini is unavailable or rejected; continue with OpenAI as the provider fallback.
-      }
-      try {
-        const raw = await openaiClient.generateJson({ userText: prompt, systemInstruction: INTENT_SYSTEM_INSTRUCTION, jsonSchema: MUSIC_INTENT_JSON_SCHEMA, signal });
-        credState.openaiValid = true;
-        return parseIntent(raw);
-      } catch (error) {
-        if (error instanceof Error && /OpenAI API key was rejected/i.test(error.message)) credState.openaiValid = false;
-        throw error;
-      }
-    };
+    aiProviders.push({
+      name: "openai",
+      client: openaiClient,
+      onValidity: (valid) => {
+        credState.openaiValid = valid;
+      },
+    });
   }
 
-  const transitionPlanner = createTransitionPlanner(geminiClient);
-  const stageIntentGenerator = createStageIntentGenerator(geminiClient);
+  const tieredAIClient = aiProviders.length > 0 ? createTieredAIClient(aiProviders) : null;
+
+  // Initialize Intent Extractor
+  let intentExtractor: IntentExtractor | null = deps.intentExtractor ?? null;
+  if (!intentExtractor && tieredAIClient) {
+    intentExtractor = createIntentExtractor(tieredAIClient);
+  }
+
+  // Initialize Vision Service (Grok Vision top priority with Gemini Vision fallback)
+  let visionService: GeminiVisionService | null = deps.visionService ?? null;
+  if (!visionService) {
+    const grokVision = config.grokApiKey ? createGrokVisionService(config.grokApiKey) : null;
+    const geminiVision = config.geminiApiKey ? createGeminiVisionService(config.geminiApiKey, config.geminiModel) : null;
+
+    if (grokVision && geminiVision) {
+      visionService = {
+        async analyzeExpression(base64Image, mimeType, signal) {
+          try {
+            const res = await grokVision.analyzeExpression(base64Image, mimeType, signal);
+            credState.grokValid = true;
+            return res;
+          } catch (err) {
+            credState.grokValid = false;
+            logger.warn(
+              `[Vision Tier] Grok Vision failed (${err instanceof Error ? err.message : String(err)}). Falling back to Gemini Vision.`,
+            );
+            const res = await geminiVision.analyzeExpression(base64Image, mimeType, signal);
+            credState.geminiValid = true;
+            return res;
+          }
+        },
+      };
+    } else if (grokVision) {
+      visionService = grokVision;
+    } else if (geminiVision) {
+      visionService = geminiVision;
+    }
+  }
+
+  const transitionPlanner = createTransitionPlanner(tieredAIClient);
+  const stageIntentGenerator = createStageIntentGenerator(tieredAIClient);
   const playlistAssembler = createPlaylistAssembler(spotifySearch);
   const transitionController = createTransitionController(
     transitionPlanner,
@@ -122,7 +159,7 @@ export function createApp(deps: AppDependencies = {}): Express {
   const musicController = createMusicController(config, credState, spotifyAuth, {
     intentExtractor,
     spotifySearch,
-    reranker: createSemanticReranker(geminiClient),
+    reranker: createSemanticReranker(tieredAIClient),
   });
   const spotifyController = createSpotifyController(config, spotifyAuth);
   const statusController = createStatusController(config, credState, spotifyAuth);

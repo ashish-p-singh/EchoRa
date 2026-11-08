@@ -11,9 +11,9 @@ export function createCameraController(
   return {
     async analyze(req: Request<unknown, unknown, ValidatedCameraImage>, res: Response, next: NextFunction) {
       try {
-        if (!config.geminiApiKey || !visionService) {
+        if ((!config.geminiApiKey && !config.grokApiKey) || !visionService) {
           throw new AppError("GEMINI_AUTH_FAILED", {
-            message: "Gemini API key is not configured for camera vision analysis. Run `npm run setup` first.",
+            message: "Vision AI key (Grok or Gemini) is not configured for camera vision analysis. Run `npm run setup` first.",
           });
         }
 

@@ -1,7 +1,7 @@
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import fs from "node:fs";
-import { ENV_FILE, loadConfig, DEFAULT_GEMINI_MODEL, DEFAULT_OPENAI_MODEL } from "../src/config/env.js";
+import { ENV_FILE, loadConfig, DEFAULT_GEMINI_MODEL, DEFAULT_OPENAI_MODEL, DEFAULT_GROK_MODEL } from "../src/config/env.js";
 import { validateGeminiKey } from "../src/services/gemini/validateKey.js";
 import { validateSpotifyCredentials } from "../src/services/spotify/validateCredentials.js";
 
@@ -23,8 +23,17 @@ async function main() {
   const rl = readline.createInterface({ input, output });
 
   try {
-    // 1. Gemini API Key
-    console.log("1. Google Gemini API Key");
+    // 1. Grok (xAI) API Key (Primary Provider, top preference)
+    console.log("1. Grok (xAI) API Key (Primary Provider, top preference)");
+    console.log("   (Get one from https://console.x.ai)");
+    const currentGrok = existing.grokApiKey ? `[configured: ...${existing.grokApiKey.slice(-4)}]` : "[not configured]";
+    const grokKey = await promptSecret(rl, `   Enter Grok API Key ${currentGrok} (press Enter to keep): `);
+    const finalGrokKey = grokKey || existing.grokApiKey || "";
+    const grokModelInput = await promptSecret(rl, `   Grok model [${existing.grokModel || DEFAULT_GROK_MODEL}] (press Enter to keep): `);
+    const finalGrokModel = grokModelInput || existing.grokModel || DEFAULT_GROK_MODEL;
+
+    // 2. Gemini API Key (Secondary provider / Primary fallback)
+    console.log("\n2. Google Gemini API Key (Secondary provider)");
     console.log("   (Get one from https://aistudio.google.com/app/apikey)");
     const currentGemini = existing.geminiApiKey ? `[configured: ...${existing.geminiApiKey.slice(-4)}]` : "[not configured]";
     const geminiKey = await promptSecret(rl, `   Enter Gemini API Key ${currentGemini} (press Enter to keep): `);
@@ -75,6 +84,8 @@ async function main() {
     // Write to backend/.env
     const envContent = [
       `# ECHORA API Credentials`,
+      `GROK_API_KEY=${finalGrokKey}`,
+      `GROK_MODEL=${finalGrokModel}`,
       `GEMINI_API_KEY=${finalGeminiKey}`,
       `GEMINI_MODEL=${existing.geminiModel || DEFAULT_GEMINI_MODEL}`,
       `OPENAI_API_KEY=${finalOpenAIKey}`,
