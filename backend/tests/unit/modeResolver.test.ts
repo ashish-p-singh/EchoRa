@@ -26,13 +26,23 @@ describe("modeResolver", () => {
     expect(res.status.missing.length).toBeGreaterThan(0);
   });
 
-  it("enables live interpretMode and prioritizes Grok when configured", () => {
+  it("enables live interpretMode and prioritizes Gemini as 1st preference when configured", () => {
     const config = { ...baseConfig, grokApiKey: "xai-test-key", geminiApiKey: "fake-gemini-key" };
     const credState = { grokValid: true, geminiValid: true, openaiValid: null, spotifyValid: null };
     const res = resolveAppMode(config, credState, null);
 
     expect(res.interpretMode).toBe("live");
     expect(res.searchMode).toBe("mock"); // search still needs Spotify
+    expect(res.status.activeProvider).toBe("gemini");
+  });
+
+  it("falls back to Grok as 2nd preference when Gemini is unavailable", () => {
+    const config = { ...baseConfig, grokApiKey: "xai-test-key", geminiApiKey: "fake-gemini-key" };
+    const credState = { grokValid: true, geminiValid: false, openaiValid: null, spotifyValid: null };
+    const res = resolveAppMode(config, credState, null);
+
+    expect(res.interpretMode).toBe("live");
+    expect(res.searchMode).toBe("mock");
     expect(res.status.activeProvider).toBe("grok");
   });
 

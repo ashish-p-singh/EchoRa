@@ -23,8 +23,15 @@ async function main() {
   const rl = readline.createInterface({ input, output });
 
   try {
-    // 1. Grok (xAI) API Key (Primary Provider, top preference)
-    console.log("1. Grok (xAI) API Key (Primary Provider, top preference)");
+    // 1. Google Gemini API Key (Primary Provider, 1st preference)
+    console.log("1. Google Gemini API Key (Primary Provider, 1st preference)");
+    console.log("   (Get one from https://aistudio.google.com/app/apikey)");
+    const currentGemini = existing.geminiApiKey ? `[configured: ...${existing.geminiApiKey.slice(-4)}]` : "[not configured]";
+    const geminiKey = await promptSecret(rl, `   Enter Gemini API Key ${currentGemini} (press Enter to keep): `);
+    const finalGeminiKey = geminiKey || existing.geminiApiKey || "";
+
+    // 2. Grok (xAI) API Key (Secondary Provider, 2nd preference)
+    console.log("\n2. Grok (xAI) API Key (Secondary Provider, 2nd preference)");
     console.log("   (Get one from https://console.x.ai)");
     const currentGrok = existing.grokApiKey ? `[configured: ...${existing.grokApiKey.slice(-4)}]` : "[not configured]";
     const grokKey = await promptSecret(rl, `   Enter Grok API Key ${currentGrok} (press Enter to keep): `);
@@ -32,14 +39,8 @@ async function main() {
     const grokModelInput = await promptSecret(rl, `   Grok model [${existing.grokModel || DEFAULT_GROK_MODEL}] (press Enter to keep): `);
     const finalGrokModel = grokModelInput || existing.grokModel || DEFAULT_GROK_MODEL;
 
-    // 2. Gemini API Key (Secondary provider / Primary fallback)
-    console.log("\n2. Google Gemini API Key (Secondary provider)");
-    console.log("   (Get one from https://aistudio.google.com/app/apikey)");
-    const currentGemini = existing.geminiApiKey ? `[configured: ...${existing.geminiApiKey.slice(-4)}]` : "[not configured]";
-    const geminiKey = await promptSecret(rl, `   Enter Gemini API Key ${currentGemini} (press Enter to keep): `);
-    const finalGeminiKey = geminiKey || existing.geminiApiKey || "";
-
-    console.log("\n1b. OpenAI API Key (fallback provider, optional)");
+    // 3. OpenAI API Key (Tertiary fallback provider, optional)
+    console.log("\n3. OpenAI API Key (Tertiary fallback provider, optional)");
     const currentOpenAI = existing.openaiApiKey ? "[configured: hidden]" : "[not configured]";
     const openaiKey = await promptSecret(rl, `   Enter OpenAI API Key ${currentOpenAI} (press Enter to keep): `);
     const finalOpenAIKey = openaiKey || existing.openaiApiKey || "";

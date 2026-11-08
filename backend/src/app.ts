@@ -72,29 +72,29 @@ export function createApp(deps: AppDependencies = {}): Express {
   }
 
   // Initialize AI Provider Clients in Tiered Preference Order:
-  // 1. Grok (xAI) - Top preference
-  // 2. Gemini - Secondary preference / Primary fallback
+  // 1. Gemini - Top preference (Primary Provider)
+  // 2. Grok (xAI) - Secondary preference (2nd priority)
   // 3. OpenAI - Tertiary fallback
-  const grokClient = config.grokApiKey ? createGrokClient(config.grokApiKey, config.grokModel) : null;
   const geminiClient = config.geminiApiKey ? createGeminiClient(config.geminiApiKey, config.geminiModel) : null;
+  const grokClient = config.grokApiKey ? createGrokClient(config.grokApiKey, config.grokModel) : null;
   const openaiClient = config.openaiApiKey ? createOpenAIClient(config.openaiApiKey, config.openaiModel) : null;
 
   const aiProviders: AIProviderTier[] = [];
-  if (grokClient) {
-    aiProviders.push({
-      name: "grok",
-      client: grokClient,
-      onValidity: (valid) => {
-        credState.grokValid = valid;
-      },
-    });
-  }
   if (geminiClient) {
     aiProviders.push({
       name: "gemini",
       client: geminiClient,
       onValidity: (valid) => {
         credState.geminiValid = valid;
+      },
+    });
+  }
+  if (grokClient) {
+    aiProviders.push({
+      name: "grok",
+      client: grokClient,
+      onValidity: (valid) => {
+        credState.grokValid = valid;
       },
     });
   }
@@ -116,34 +116,34 @@ export function createApp(deps: AppDependencies = {}): Express {
     intentExtractor = createIntentExtractor(tieredAIClient);
   }
 
-  // Initialize Vision Service (Grok Vision top priority with Gemini Vision fallback)
+  // Initialize Vision Service (Gemini Vision 1st priority with Grok Vision fallback)
   let visionService: GeminiVisionService | null = deps.visionService ?? null;
   if (!visionService) {
-    const grokVision = config.grokApiKey ? createGrokVisionService(config.grokApiKey) : null;
     const geminiVision = config.geminiApiKey ? createGeminiVisionService(config.geminiApiKey, config.geminiModel) : null;
+    const grokVision = config.grokApiKey ? createGrokVisionService(config.grokApiKey) : null;
 
-    if (grokVision && geminiVision) {
+    if (geminiVision && grokVision) {
       visionService = {
         async analyzeExpression(base64Image, mimeType, signal) {
           try {
-            const res = await grokVision.analyzeExpression(base64Image, mimeType, signal);
-            credState.grokValid = true;
-            return res;
-          } catch (err) {
-            credState.grokValid = false;
-            logger.warn(
-              `[Vision Tier] Grok Vision failed (${err instanceof Error ? err.message : String(err)}). Falling back to Gemini Vision.`,
-            );
             const res = await geminiVision.analyzeExpression(base64Image, mimeType, signal);
             credState.geminiValid = true;
+            return res;
+          } catch (err) {
+            credState.geminiValid = false;
+            logger.warn(
+              `[Vision Tier] Gemini Vision failed (${err instanceof Error ? err.message : String(err)}). Falling back to Grok Vision.`,
+            );
+            const res = await grokVision.analyzeExpression(base64Image, mimeType, signal);
+            credState.grokValid = true;
             return res;
           }
         },
       };
-    } else if (grokVision) {
-      visionService = grokVision;
     } else if (geminiVision) {
       visionService = geminiVision;
+    } else if (grokVision) {
+      visionService = grokVision;
     }
   }
 

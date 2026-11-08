@@ -73,44 +73,17 @@ describe("grokClient", () => {
 });
 
 describe("tieredAIClient", () => {
-  it("uses Grok first when healthy", async () => {
+  it("uses primary provider (Gemini) first when healthy", async () => {
+    const geminiMock: GeminiClient = {
+      generateJson: vi.fn().mockResolvedValue(JSON.stringify({ provider: "gemini" })),
+    };
     const grokMock: GeminiClient = {
       generateJson: vi.fn().mockResolvedValue(JSON.stringify({ provider: "grok" })),
     };
-    const geminiMock: GeminiClient = {
-      generateJson: vi.fn().mockResolvedValue(JSON.stringify({ provider: "gemini" })),
-    };
 
     const tiered = createTieredAIClient([
-      { name: "grok", client: grokMock },
       { name: "gemini", client: geminiMock },
-    ]);
-
-    const res = await tiered.generateJson({
-      userText: "test",
-      systemInstruction: "instruction",
-      jsonSchema: {},
-    });
-
-    expect(JSON.parse(res)).toEqual({ provider: "grok" });
-    expect(grokMock.generateJson).toHaveBeenCalledTimes(1);
-    expect(geminiMock.generateJson).not.toHaveBeenCalled();
-  });
-
-  it("falls back to Gemini when Grok fails", async () => {
-    const grokMock: GeminiClient = {
-      generateJson: vi.fn().mockRejectedValue(new AppError("GEMINI_AUTH_FAILED", { message: "No credits" })),
-    };
-    const geminiMock: GeminiClient = {
-      generateJson: vi.fn().mockResolvedValue(JSON.stringify({ provider: "gemini" })),
-    };
-
-    let grokValid: boolean | null = null;
-    let geminiValid: boolean | null = null;
-
-    const tiered = createTieredAIClient([
-      { name: "grok", client: grokMock, onValidity: (v) => { grokValid = v; } },
-      { name: "gemini", client: geminiMock, onValidity: (v) => { geminiValid = v; } },
+      { name: "grok", client: grokMock },
     ]);
 
     const res = await tiered.generateJson({
@@ -120,9 +93,36 @@ describe("tieredAIClient", () => {
     });
 
     expect(JSON.parse(res)).toEqual({ provider: "gemini" });
-    expect(grokMock.generateJson).toHaveBeenCalledTimes(1);
     expect(geminiMock.generateJson).toHaveBeenCalledTimes(1);
-    expect(grokValid).toBe(false);
-    expect(geminiValid).toBe(true);
+    expect(grokMock.generateJson).not.toHaveBeenCalled();
+  });
+
+  it("falls back to Grok (2nd preference) when Gemini fails", async () => {
+    const geminiMock: GeminiClient = {
+      generateJson: vi.fn().mockRejectedValue(new AppError("GEMINI_AUTH_FAILED", { message: "Quota reached" })),
+    };
+    const grokMock: GeminiClient = {
+      generateJson: vi.fn().mockResolvedValue(JSON.stringify({ provider: "grok" })),
+    };
+
+    let geminiValid: boolean | null = null;
+    let grokValid: boolean | null = null;
+
+    const tiered = createTieredAIClient([
+      { name: "gemini", client: geminiMock, onValidity: (v) => { geminiValid = v; } },
+      { name: "grok", client: grokMock, onValidity: (v) => { grokValid = v; } },
+    ]);
+
+    const res = await tiered.generateJson({
+      userText: "test",
+      systemInstruction: "instruction",
+      jsonSchema: {},
+    });
+
+    expect(JSON.parse(res)).toEqual({ provider: "grok" });
+    expect(geminiMock.generateJson).toHaveBeenCalledTimes(1);
+    expect(grokMock.generateJson).toHaveBeenCalledTimes(1);
+    expect(geminiValid).toBe(false);
+    expect(grokValid).toBe(true);
   });
 });

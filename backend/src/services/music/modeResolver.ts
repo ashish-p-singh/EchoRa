@@ -56,10 +56,10 @@ export function resolveAppMode(
   const searchMode: AppMode = aiProviderReady && spotifyReady ? "live" : "mock";
 
   const activeProvider =
-    grokConfigured && credState.grokValid !== false
-      ? "grok"
-      : geminiConfigured && credState.geminiValid !== false
-        ? "gemini"
+    geminiConfigured && credState.geminiValid !== false
+      ? "gemini"
+      : grokConfigured && credState.grokValid !== false
+        ? "grok"
         : openaiConfigured && credState.openaiValid !== false
           ? "openai"
           : "mock";

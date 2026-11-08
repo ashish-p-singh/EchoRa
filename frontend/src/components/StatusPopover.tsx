@@ -72,10 +72,28 @@ export function StatusPopover({ status, isOpen, onClose }: StatusPopoverProps) {
 
         {/* Rows */}
         <div className="space-y-2.5">
-          {/* Grok (xAI) - Priority 1 */}
+          {/* Gemini - Priority 1 */}
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-2 text-text-dim">
-              <Sparkles className="w-4 h-4 text-emerald-400" /> Grok (xAI) AI <span className="text-[10px] text-text-faint">(Priority 1)</span>
+              <BrainCircuit className="w-4 h-4 text-cyan" /> Google Gemini AI <span className="text-[10px] text-text-faint">(Priority 1)</span>
+            </span>
+            <div className="flex items-center gap-1.5">
+              {isGeminiOk ? (
+                <span className="text-live-status flex items-center gap-1 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Ready
+                </span>
+              ) : (
+                <span className="text-mock-status flex items-center gap-1 font-medium">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Simulation
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Grok (xAI) - Priority 2 */}
+          <div className="flex items-center justify-between text-xs">
+            <span className="flex items-center gap-2 text-text-dim">
+              <Sparkles className="w-4 h-4 text-emerald-400" /> Grok (xAI) AI <span className="text-[10px] text-text-faint">(Priority 2)</span>
             </span>
             <div className="flex items-center gap-1.5">
               {isGrokOk ? (
@@ -89,24 +107,6 @@ export function StatusPopover({ status, isOpen, onClose }: StatusPopoverProps) {
               ) : (
                 <span className="text-text-faint flex items-center gap-1 font-medium">
                   Not configured
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Gemini */}
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-2 text-text-dim">
-              <BrainCircuit className="w-4 h-4 text-cyan" /> Google Gemini AI <span className="text-[10px] text-text-faint">(Priority 2)</span>
-            </span>
-            <div className="flex items-center gap-1.5">
-              {isGeminiOk ? (
-                <span className="text-live-status flex items-center gap-1 font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Ready
-                </span>
-              ) : (
-                <span className="text-mock-status flex items-center gap-1 font-medium">
-                  <AlertTriangle className="w-3.5 h-3.5" /> Simulation
                 </span>
               )}
             </div>
