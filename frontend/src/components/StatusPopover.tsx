@@ -39,6 +39,7 @@ export function StatusPopover({ status, isOpen, onClose }: StatusPopoverProps) {
 
   if (!isOpen || !status) return null;
 
+  const isGrokOk = Boolean(status.grok?.configured && status.grok?.valid !== false);
   const isGeminiOk = status.gemini.configured && status.gemini.valid !== false;
   const isSpotifyOk = status.spotify.configured && status.spotify.authorized;
 
@@ -71,10 +72,32 @@ export function StatusPopover({ status, isOpen, onClose }: StatusPopoverProps) {
 
         {/* Rows */}
         <div className="space-y-2.5">
+          {/* Grok (xAI) - Priority 1 */}
+          <div className="flex items-center justify-between text-xs">
+            <span className="flex items-center gap-2 text-text-dim">
+              <Sparkles className="w-4 h-4 text-emerald-400" /> Grok (xAI) AI <span className="text-[10px] text-text-faint">(Priority 1)</span>
+            </span>
+            <div className="flex items-center gap-1.5">
+              {isGrokOk ? (
+                <span className="text-emerald-400 flex items-center gap-1 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Ready
+                </span>
+              ) : status.grok?.configured ? (
+                <span className="text-amber-400 flex items-center gap-1 font-medium" title="API key configured, awaiting credits">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Credits required
+                </span>
+              ) : (
+                <span className="text-text-faint flex items-center gap-1 font-medium">
+                  Not configured
+                </span>
+              )}
+            </div>
+          </div>
+
           {/* Gemini */}
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-2 text-text-dim">
-              <BrainCircuit className="w-4 h-4 text-cyan" /> Google Gemini AI
+              <BrainCircuit className="w-4 h-4 text-cyan" /> Google Gemini AI <span className="text-[10px] text-text-faint">(Priority 2)</span>
             </span>
             <div className="flex items-center gap-1.5">
               {isGeminiOk ? (
@@ -107,8 +130,18 @@ export function StatusPopover({ status, isOpen, onClose }: StatusPopoverProps) {
             </div>
           </div>
 
+          {/* Active AI Provider */}
+          {status.activeProvider && (
+            <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
+              <span className="text-text-faint">Active Engine:</span>
+              <span className="text-emerald-300 uppercase font-mono text-[11px] font-semibold">
+                {status.activeProvider}
+              </span>
+            </div>
+          )}
+
           {/* Interpret Mode */}
-          <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
+          <div className="flex items-center justify-between text-xs pt-0.5">
             <span className="text-text-faint">Intent Interpretation:</span>
             <span className="text-text-dim uppercase font-mono text-[11px]">
               {status.interpretMode}

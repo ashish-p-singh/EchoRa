@@ -71,6 +71,7 @@ export interface SearchResponse {
   tracks: Track[];
   /** Optional human-readable notice, e.g. why the app is in mock mode. */
   notice?: string;
+  provider?: 'grok' | 'gemini' | 'openai' | 'mock';
 }
 
 export interface StatusResponse {

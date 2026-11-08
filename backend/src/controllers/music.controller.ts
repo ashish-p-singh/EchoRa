@@ -28,7 +28,10 @@ export function createMusicController(
           rawPrompt: prompt,
         };
         const result = await pipeline.interpret(prompt, resolution.interpretMode, discoveryContext);
-        res.json(result);
+        res.json({
+          ...result,
+          provider: result.mode === "live" ? (resolution.status.activeProvider ?? "gemini") : "mock",
+        });
       } catch (err) {
         next(err);
       }
@@ -50,7 +53,10 @@ export function createMusicController(
           resolution.status.missing,
           discoveryContext,
         );
-        res.json(result);
+        res.json({
+          ...result,
+          provider: result.mode === "live" ? (resolution.status.activeProvider ?? "gemini") : "mock",
+        });
       } catch (err) {
         next(err);
       }

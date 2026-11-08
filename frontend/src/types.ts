@@ -73,12 +73,21 @@ export interface SearchResponse {
   };
   tracks: Track[];
   notice?: string;
+  provider?: 'grok' | 'gemini' | 'openai' | 'mock';
 }
 
 export interface StatusResponse {
   mode: 'live' | 'mock';
   interpretMode: 'live' | 'mock';
+  grok?: {
+    configured: boolean;
+    valid: boolean | null;
+  };
   gemini: {
+    configured: boolean;
+    valid: boolean | null;
+  };
+  openai?: {
     configured: boolean;
     valid: boolean | null;
   };
@@ -87,6 +96,7 @@ export interface StatusResponse {
     valid: boolean | null;
     authorized: boolean;
   };
+  activeProvider?: 'grok' | 'gemini' | 'openai' | 'mock';
   missing: string[];
 }
 

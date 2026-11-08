@@ -31,6 +31,51 @@ export const IntentPanel = memo(function IntentPanel({ data, userPrompt, onCopyN
   const { intent, mode } = data;
   const breakdown = intent.breakdown;
 
+  // Provider label and badge styling
+  const getProviderInfo = () => {
+    if (mode !== 'live') {
+      return {
+        name: 'Mock Simulation',
+        shortBadge: 'Mock Mode',
+        fullBadge: 'Mock Mode',
+        badgeClass: 'bg-mock-status/15 text-mock-status border-mock-status/30',
+      };
+    }
+    const prov = data.provider || 'grok';
+    if (prov === 'grok') {
+      return {
+        name: 'Grok API',
+        shortBadge: 'Live · Grok API',
+        fullBadge: 'Live AI · Grok API (xAI)',
+        badgeClass: 'bg-emerald-400/15 text-emerald-300 border-emerald-400/30',
+      };
+    }
+    if (prov === 'gemini') {
+      return {
+        name: 'Gemini API',
+        shortBadge: 'Live · Gemini API',
+        fullBadge: 'Live AI · Google Gemini API',
+        badgeClass: 'bg-live-status/15 text-live-status border-live-status/30',
+      };
+    }
+    if (prov === 'openai') {
+      return {
+        name: 'OpenAI API',
+        shortBadge: 'Live · OpenAI API',
+        fullBadge: 'Live AI · OpenAI API',
+        badgeClass: 'bg-cyan/15 text-cyan border-cyan/30',
+      };
+    }
+    return {
+      name: 'Live AI',
+      shortBadge: 'Live AI',
+      fullBadge: 'Live AI',
+      badgeClass: 'bg-live-status/15 text-live-status border-live-status/30',
+    };
+  };
+
+  const providerInfo = getProviderInfo();
+
   // Time context icon mapping
   const renderTimeContent = () => {
     const time = intent.time_context;
@@ -106,6 +151,12 @@ export const IntentPanel = memo(function IntentPanel({ data, userPrompt, onCopyN
         >
           <AudioWaveform className="w-4 h-4 mood-accent-text" />
           <span>How I heard you</span>
+          <span
+            className={`text-[11px] px-2 py-0.5 rounded-full font-medium border flex items-center gap-1 ${providerInfo.badgeClass}`}
+          >
+            <Sparkles className="w-2.5 h-2.5" />
+            {providerInfo.shortBadge}
+          </span>
           <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
         </button>
 
@@ -134,16 +185,12 @@ export const IntentPanel = memo(function IntentPanel({ data, userPrompt, onCopyN
           </h2>
         </div>
 
-        {/* Mode badge */}
+        {/* Mode & Active API Provider badge */}
         <span
-          className={`text-xs px-2.5 py-1 rounded-full font-semibold flex items-center gap-1.5 ${
-            mode === 'live'
-              ? 'bg-live-status/15 text-live-status border border-live-status/30'
-              : 'bg-mock-status/15 text-mock-status border border-mock-status/30'
-          }`}
+          className={`text-xs px-2.5 py-1 rounded-full font-semibold border flex items-center gap-1.5 ${providerInfo.badgeClass}`}
         >
           <Sparkles className="w-3 h-3" />
-          {mode === 'live' ? 'Live AI' : 'Mock Mode'}
+          {providerInfo.fullBadge}
         </span>
       </div>
 

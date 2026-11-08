@@ -13,6 +13,7 @@ export interface InterpretResponse {
   mode: AppMode;
   intent: MusicIntent;
   notice?: string;
+  provider?: "grok" | "gemini" | "openai" | "mock";
 }
 
 export interface SearchResponse {
@@ -22,6 +23,7 @@ export interface SearchResponse {
   queries: SearchQueries;
   tracks: Track[];
   notice?: string;
+  provider?: "grok" | "gemini" | "openai" | "mock";
 }
 
 export interface StatusResponse {

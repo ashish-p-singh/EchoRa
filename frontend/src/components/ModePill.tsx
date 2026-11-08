@@ -10,7 +10,17 @@ export function ModePill({ status }: ModePillProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const isLive = status?.mode === 'live';
-  const label = isLive ? 'Live' : 'Mock';
+  const providerName =
+    status?.activeProvider && status.activeProvider !== 'mock'
+      ? status.activeProvider === 'grok'
+        ? 'Grok'
+        : status.activeProvider === 'gemini'
+          ? 'Gemini'
+          : status.activeProvider === 'openai'
+            ? 'OpenAI'
+            : status.activeProvider
+      : null;
+  const label = isLive ? (providerName ? `Live · ${providerName}` : 'Live') : 'Mock';
 
   return (
     <div className="relative">
